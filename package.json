@@ -1,0 +1,20 @@
+{
+  "name": "Medha",
+  "version": "1.0.0",
+  "description": "AI assistant for BuySmart",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Anurag Dubey",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@google/genai": "^2.28.0",
+    "dotenv": "^18.0.7",
+    "express": "^5.3.0",
+    "mongodb": "^7.7.0",
+    "zod": "^4.6.5"
+  }
+}
