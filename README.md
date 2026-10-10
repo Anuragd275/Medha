@@ -6,7 +6,7 @@ Medha is a Natural Language to Query generating engine which is built to support
 
 ---
 
-![High Level Overview](Images\HighLevelOverview.png)
+![High Level Overview](Images/HighLevelOverview.png)
 
 ---
 
