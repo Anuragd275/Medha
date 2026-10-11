@@ -23,41 +23,51 @@ function deduplicateModels(products) {
 export async function executeMedhaSearch(db, userQuery, page = 1, limit = 20) {
     const parsed = await parseQueryWithMedha(userQuery);
 
-    // 1. Validate that the collection actually exists
-    const targetCollection = parsed.collection || 'mobile';
+    if (parsed.needs_clarification) {
+        return ({
+            needs_clarification: true,
+            refinement_question: parsed.refinement_question,
+            quick_chips: parsed.quick_chips,
+            collection: null,
+            deduplicatedResults: []
+        });
+    } else {
+        // 1. Validate that the collection actually exists
+        const targetCollection = parsed.collection || 'mobile';
 
-    // 2. Build the filter
-    const filter = {
-        ...parsed.mongo_filter,
-    };
+        // 2. Build the filter
+        const filter = {
+            ...parsed.mongo_filter,
+        };
 
-    filter.deal_price = {
-        ...filter.deal_price,
-        $gt: 0 // Never return zero or negative prices
-    };
+        filter.deal_price = {
+            ...filter.deal_price,
+            $gt: 0 // Never return zero or negative prices
+        };
 
-    if (parsed.search_keyword) {
-        filter.$text = { $search: parsed.search_keyword };
+        if (parsed.search_keyword) {
+            filter.$text = { $search: parsed.search_keyword };
+        }
+
+        const sort = parsed.mongo_sort && Object.keys(parsed.mongo_sort).length > 0
+            ? parsed.mongo_sort
+            : { rating: -1 };
+
+        // 3. Query the dynamically routed collection
+        const results = await db.collection(targetCollection)
+            .find(filter)
+            .sort(sort)
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .toArray();
+
+        return {
+            collection: targetCollection,
+            deduplicatedResults: deduplicateModels(results),
+            refinement: {
+                question: parsed.refinement_question,
+                chips: parsed.quick_chips,
+            },
+        };
     }
-
-    const sort = parsed.mongo_sort && Object.keys(parsed.mongo_sort).length > 0
-        ? parsed.mongo_sort
-        : { rating: -1 };
-
-    // 3. Query the dynamically routed collection
-    const results = await db.collection(targetCollection)
-        .find(filter)
-        .sort(sort)
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .toArray();
-
-    return {
-        collection: targetCollection,
-        deduplicatedResults: deduplicateModels(results),
-        refinement: {
-            question: parsed.refinement_question,
-            chips: parsed.quick_chips,
-        },
-    };
 }
