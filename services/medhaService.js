@@ -49,10 +49,13 @@ export async function executeMedhaSearch(db, userQuery, page = 1, limit = 20) {
             filter.$text = { $search: parsed.search_keyword };
         }
 
+        // console.log('MongoDB filter:', JSON.stringify(filter, null, 2));
+
         const sort = parsed.mongo_sort && Object.keys(parsed.mongo_sort).length > 0
             ? parsed.mongo_sort
             : { rating: -1 };
 
+        // console.log('MongoDB sort:', JSON.stringify(sort, null, 2));
         // 3. Query the dynamically routed collection
         const results = await db.collection(targetCollection)
             .find(filter)
