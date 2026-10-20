@@ -46,9 +46,10 @@ evidence to establish it.
    - rating (number)
 
    specs:
-   - CAPACITY (string)
-   - OUTPUT_PORTS (string)
-
+   - BATTERY (string)
+   - CONNECTOR TYPE (string, e.g. "USB-C", "Micro-USB")
+   - NUMBER OF PORTS(Integer)
+   - OUTPUT POWER (string, e.g. "18 Watts", "20 Watts")
 
 
 ### Query Interpretation Rules
