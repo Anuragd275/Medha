@@ -3,7 +3,10 @@ import { executeMedhaSearch } from '../services/medhaService.js';
 import { db } from '../db/db.js';
 const routes = express.Router();
 
-// Healthy check endpoint
+// Homescreen
+routes.get('/', (req, res) => res.render('index', { title: 'Medha', endpoint: '/api/search' }));
+
+// Health check endpoint
 routes.get('/api/health', (req, res) => {
     res.json({ status: 'OK' });
 });

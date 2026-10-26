@@ -1,0 +1,395 @@
+//- views/index.pug
+//- Render with: res.render('index', { title: 'Medha', endpoint: '/api/search' })
+
+mixin icon(name)
+  svg(viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true")
+    case name
+      when 'sun'
+        circle(cx="12" cy="12" r="4")
+        path(d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4")
+      when 'system'
+        rect(x="3" y="4" width="18" height="12" rx="2")
+        path(d="M8 20h8M12 16v4")
+      when 'moon'
+        path(d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z")
+
+mixin themeButton(value, label, iconName)
+  button.theme-btn(type="button" data-theme-value=value aria-label=label title=label aria-pressed="false")
+    +icon(iconName)
+
+doctype html
+html(lang="en" data-theme="system")
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title= (typeof title !== 'undefined' ? title : 'Medha') + ' | Natural language search'
+    meta(name="description" content="Medha turns plain-language questions into database queries for BuySmart.")
+    meta(name="color-scheme" content="light dark")
+
+    //- Apply the saved theme before first paint to avoid a flash
+    script.
+      (function () {
+        var t = 'system';
+        try { t = localStorage.getItem('medha-theme') || 'system'; } catch (e) {}
+        document.documentElement.setAttribute('data-theme', t);
+      })();
+
+    link(rel="preconnect" href="https://fonts.googleapis.com")
+    link(rel="preconnect" href="https://fonts.gstatic.com" crossorigin)
+    link(rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@600&display=swap")
+
+    style.
+      :root {
+        --bg: #fafafb;
+        --surface: #ffffff;
+        --text: #16181d;
+        --muted: #5f6572;
+        --line: #e4e6eb;
+        --accent: #3f44c8;
+        --accent-text: #ffffff;
+        --soft: #f1f2f6;
+        --danger: #b3261e;
+        --radius: 10px;
+        --sans: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+        --deva: "Noto Sans Devanagari", "Hanken Grotesk", sans-serif;
+      }
+
+      html[data-theme="dark"] {
+        --bg: #0f1115;
+        --surface: #161922;
+        --text: #eceef3;
+        --muted: #9aa0ae;
+        --line: #272b36;
+        --accent: #8d92ff;
+        --accent-text: #0f1115;
+        --soft: #1b1f2a;
+        --danger: #ff8a80;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        html[data-theme="system"] {
+          --bg: #0f1115;
+          --surface: #161922;
+          --text: #eceef3;
+          --muted: #9aa0ae;
+          --line: #272b36;
+          --accent: #8d92ff;
+          --accent-text: #0f1115;
+          --soft: #1b1f2a;
+          --danger: #ff8a80;
+        }
+      }
+
+      *, *::before, *::after { box-sizing: border-box; }
+
+      html { color-scheme: light dark; }
+      html[data-theme="light"] { color-scheme: light; }
+      html[data-theme="dark"] { color-scheme: dark; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 1rem;
+        line-height: 1.6;
+        transition: background-color .2s ease, color .2s ease;
+      }
+
+      .wrap { width: 100%; max-width: 680px; margin: 0 auto; padding: 0 1.25rem; }
+      .sr-only { position: absolute; left: -9999px; }
+
+      /* Header */
+      .site-header { padding: 1.25rem 0; }
+      .site-header .wrap { display: flex; align-items: center; justify-content: space-between; }
+      .brand { display: flex; align-items: baseline; gap: .6rem; text-decoration: none; color: inherit; }
+      .brand-mark { font-family: var(--deva); font-size: 1.5rem; font-weight: 600; line-height: 1; }
+      .brand-name { font-weight: 500; color: var(--muted); }
+
+      .theme-switch {
+        display: inline-flex;
+        padding: 3px;
+        gap: 2px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface);
+      }
+      .theme-btn {
+        display: grid; place-items: center;
+        width: 30px; height: 30px;
+        border: 0; border-radius: 999px;
+        background: transparent; color: var(--muted);
+        cursor: pointer;
+      }
+      .theme-btn:hover { color: var(--text); }
+      .theme-btn[aria-pressed="true"] { background: var(--soft); color: var(--text); }
+
+      :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+      /* Main */
+      main { flex: 1; padding: clamp(2.5rem, 9vh, 6rem) 0 3rem; }
+      h1 {
+        margin: 0 0 .75rem;
+        font-size: clamp(2rem, 5.5vw, 3rem);
+        line-height: 1.1;
+        letter-spacing: -.02em;
+        font-weight: 700;
+      }
+      .lede { margin: 0 0 2rem; max-width: 52ch; color: var(--muted); font-size: 1.0625rem; }
+
+      /* Query box */
+      .query-box {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        transition: border-color .15s ease;
+      }
+      .query-box:focus-within { border-color: var(--accent); }
+      textarea {
+        display: block; width: 100%; min-height: 110px; resize: vertical;
+        padding: 1rem 1rem .5rem;
+        border: 0; background: transparent; color: inherit;
+        font: inherit; line-height: 1.5;
+      }
+      textarea:focus { outline: none; }
+      textarea::placeholder { color: var(--muted); opacity: .8; }
+      .query-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .5rem .75rem .75rem 1rem; }
+      .hint { font-size: .8125rem; color: var(--muted); }
+      .btn-primary {
+        padding: .55rem 1.1rem;
+        border: 0; border-radius: 8px;
+        background: var(--accent); color: var(--accent-text);
+        font: inherit; font-weight: 600; cursor: pointer;
+      }
+      .btn-primary:hover { filter: brightness(1.08); }
+      .btn-primary:disabled { opacity: .55; cursor: progress; }
+
+      /* Chips */
+      .chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+      .chips[hidden] { display: none; }
+      .examples { margin-top: 1.25rem; }
+      .chip {
+        padding: .35rem .8rem;
+        border: 1px solid var(--line); border-radius: 999px;
+        background: transparent; color: var(--muted);
+        font: inherit; font-size: .875rem; cursor: pointer;
+      }
+      .chip:hover { color: var(--text); border-color: var(--muted); }
+      .chip.refine-chip { color: var(--text); border-color: var(--accent); }
+      .chip.refine-chip:hover { background: var(--soft); }
+
+      /* Results */
+      .result { margin-top: 2rem; }
+      .result[hidden] { display: none; }
+      .question { margin: 0 0 .75rem; font-weight: 500; }
+      .question[hidden] { display: none; }
+      .refine { margin-bottom: 1.5rem; }
+
+      .products { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+      .product { padding: 1.1rem 0; border-bottom: 1px solid var(--line); }
+      .product-brand { margin: 0 0 .15rem; font-size: .875rem; color: var(--muted); }
+      .product-title {
+        margin: 0 0 .5rem;
+        color: var(--text); font-weight: 600; line-height: 1.4; text-decoration: none;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+      }
+      .product-title:hover { color: var(--accent); text-decoration: underline; }
+      .price-row { display: flex; align-items: baseline; gap: .6rem; }
+      .price { font-size: 1.25rem; font-weight: 700; letter-spacing: -.01em; }
+      .mrp { color: var(--muted); text-decoration: line-through; font-size: .9375rem; }
+      .empty { padding: 1.25rem 0; color: var(--muted); }
+      .error { color: var(--danger); font-size: .9375rem; margin: 0; }
+      .error[hidden] { display: none; }
+
+      /* Footer */
+      .site-footer { padding: 1.5rem 0 2rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .875rem; }
+      .site-footer .wrap { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+
+      @media (max-width: 480px) {
+        .hint { display: none; }
+        .query-actions { justify-content: flex-end; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * { transition: none !important; }
+      }
+
+  body
+    header.site-header
+      .wrap
+        a.brand(href="/" aria-label="Medha home")
+          span.brand-mark मेधा
+          span.brand-name Medha
+        .theme-switch(role="group" aria-label="Colour theme")
+          +themeButton('light', 'Light theme', 'sun')
+          +themeButton('system', 'Match system theme', 'system')
+          +themeButton('dark', 'Dark theme', 'moon')
+
+    main
+      .wrap
+        h1 Ask in plain language.
+        p.lede Describe what you want to find. Medha turns it into a database query and shows the matching products.
+
+        form#query-form(data-endpoint=(typeof endpoint !== 'undefined' ? endpoint : '/api/search') novalidate)
+          .query-box
+            label.sr-only(for="prompt") Your question
+            textarea#prompt(name="prompt" placeholder="e.g. Realme phones under 20,000" required)
+            .query-actions
+              span.hint Press Ctrl + Enter to send
+              button#submit.btn-primary(type="submit") Search
+
+        .chips.examples(aria-label="Example searches")
+          button.chip(type="button") Realme phones under 20,000
+          button.chip(type="button") 5G phones with 6000mAh battery
+          button.chip(type="button") Best phones under 15,000
+
+        section#result.result(hidden aria-live="polite")
+          p#question.question(hidden)
+          #chips.chips.refine(hidden aria-label="Refine your search")
+          ul#products.products
+          p#error.error(hidden)
+
+    footer.site-footer
+      .wrap
+        span Built for BuySmart
+        span Built with ❤️ by Anurag Dubey
+
+    script.
+      (function () {
+        var root = document.documentElement;
+
+        // ---- Theme switching ----
+        var themeButtons = document.querySelectorAll('.theme-btn');
+        function setTheme(value, persist) {
+          root.setAttribute('data-theme', value);
+          themeButtons.forEach(function (b) {
+            b.setAttribute('aria-pressed', String(b.dataset.themeValue === value));
+          });
+          if (persist) { try { localStorage.setItem('medha-theme', value); } catch (e) {} }
+        }
+        setTheme(root.getAttribute('data-theme') || 'system', false);
+        themeButtons.forEach(function (b) {
+          b.addEventListener('click', function () { setTheme(b.dataset.themeValue, true); });
+        });
+
+        // ---- Search ----
+        var form = document.getElementById('query-form');
+        var prompt = document.getElementById('prompt');
+        var submit = document.getElementById('submit');
+        var result = document.getElementById('result');
+        var question = document.getElementById('question');
+        var chips = document.getElementById('chips');
+        var products = document.getElementById('products');
+        var error = document.getElementById('error');
+
+        var inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+        function money(n) { return typeof n === 'number' ? inr.format(n) : ''; }
+
+        function el(tag, className, text) {
+          var node = document.createElement(tag);
+          if (className) node.className = className;
+          if (text !== undefined && text !== null) node.textContent = text;
+          return node;
+        }
+
+        function renderProduct(item) {
+          var li = el('li', 'product');
+          if (item.brand) li.appendChild(el('p', 'product-brand', item.brand));
+
+          var title = el('a', 'product-title', item.title || 'Untitled product');
+          if (typeof item.url === 'string' && /^https?:\/\//i.test(item.url)) {
+            title.href = item.url;
+            title.target = '_blank';
+            title.rel = 'noopener noreferrer';
+          }
+          li.appendChild(title);
+
+          var row = el('div', 'price-row');
+          row.appendChild(el('span', 'price', money(item.deal_price)));
+          if (typeof item.mrp === 'number' && item.mrp !== item.deal_price) {
+            row.appendChild(el('span', 'mrp', money(item.mrp)));
+          }
+          li.appendChild(row);
+          return li;
+        }
+
+        function render(data) {
+          var list = (data && data.deduplicatedResults) || [];
+          var refinement = data && data.refinement;
+
+          // Refinement question and chips
+          if (refinement && refinement.question) {
+            question.textContent = refinement.question;
+            question.hidden = false;
+          } else {
+            question.hidden = true;
+          }
+
+          chips.textContent = '';
+          var chipList = (refinement && refinement.chips) || [];
+          chipList.forEach(function (label) {
+            var b = el('button', 'chip refine-chip', label);
+            b.type = 'button';
+            b.addEventListener('click', function () {
+              prompt.value = (prompt.value.trim() + ' ' + label).trim();
+              search(prompt.value);
+            });
+            chips.appendChild(b);
+          });
+          chips.hidden = chipList.length === 0;
+
+          // Products
+          products.textContent = '';
+          if (list.length === 0) {
+            products.appendChild(el('li', 'empty', 'No products found. Try a different search.'));
+          } else {
+            list.forEach(function (item) { products.appendChild(renderProduct(item)); });
+          }
+        }
+
+        async function search(text) {
+          submit.disabled = true;
+          submit.textContent = 'Searching…';
+          error.hidden = true;
+
+          try {
+            var res = await fetch(form.dataset.endpoint + '?q=' + encodeURIComponent(text));
+            if (!res.ok) {
+              var body = null;
+              try { body = await res.json(); } catch (_) {}
+              throw new Error((body && body.error) ? body.error : 'The server returned ' + res.status + '.');
+            }
+            render(await res.json());
+          } catch (err) {
+            question.hidden = true;
+            chips.hidden = true;
+            products.textContent = '';
+            error.textContent = 'Search failed. ' + err.message;
+            error.hidden = false;
+          } finally {
+            result.hidden = false;
+            submit.disabled = false;
+            submit.textContent = 'Search';
+          }
+        }
+
+        document.querySelectorAll('.examples .chip').forEach(function (chip) {
+          chip.addEventListener('click', function () {
+            prompt.value = chip.textContent;
+            prompt.focus();
+          });
+        });
+
+        prompt.addEventListener('keydown', function (e) {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { form.requestSubmit(); }
+        });
+
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var text = prompt.value.trim();
+          if (!text) { prompt.focus(); return; }
+          search(text);
+        });
+      })();
